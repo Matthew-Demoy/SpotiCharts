@@ -16,18 +16,7 @@ export const search = async (
         },
       }
     );
-
-    /*
-    const res = await fetch(
-      "https://api.spotify.com/v1/search?" + "q=" + query + "&type=" + type,
-      {
-        headers: {
-          Authorization: accessToken,
-        },
-      }
-    );
-    */
-    return await res?.json();
+    return await res;
   } catch (e) {
     console.log("Search Error " + e);
     throw "Search Error " + e;

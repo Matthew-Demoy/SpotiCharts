@@ -17,7 +17,7 @@ export const createPlaylist = async (
         body: JSON.stringify({
           name: title ?? "playlist ",
           public: isPublic,
-          description: description,
+          description: description?.replace(/(\r\n|\n|\r)/gm, ""),
         }),
       }
     );
@@ -75,6 +75,97 @@ export const addTracksToPlaylist = async (
     return res.json();
   });
 
-
   return res;
+};
+
+export const addCoverToPlayist = async (
+  accessToken: string,
+  playlistId: string,
+  img: string
+) => {
+  try {
+    const res = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}/images`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: accessToken,
+        },
+        body: img,
+      }
+    );
+
+    return await res.json;
+  } catch (e) {
+    console.log("error in addCoverToPlayList" + e);
+  }
+};
+
+export const changePlaylistsDescription = async (
+  accessToken: string,
+  playlistId: string,
+  description: string
+) => {
+  try {
+    var res = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: accessToken,
+        },
+        body: JSON.stringify({
+          description: description,
+        }),
+      }
+    );
+    return await res.json();
+  } catch (e) {
+    console.log("error in changePlaylistDescription " + e);
+  }
+};
+
+export const getPlaylist = async (accessToken: string, playlistId: string) : Promise<SpotifyApi.PlaylistObjectFull | undefined>=> {
+  try {
+    var res = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      {
+        headers: {
+          Authorization: accessToken,
+        },
+      }
+    );
+    return await res.json();
+  } catch (e) {
+    console.log("error in changePlaylistDescription " + e);
+  }
+};
+
+export const replacePlaylistItems = async (
+  accessToken: string,
+  playlistId: string,
+  trackUris: string[]
+) => {
+  try {
+    var res = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: accessToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uris: trackUris,
+        }),
+      }
+    );
+
+    console.log(res.status)
+    console.log(await res.json())
+    return await res.json();
+  } catch (e) {
+    console.log("error in changePlaylistDescription " + e);
+  }
 };

@@ -1,5 +1,5 @@
 export const defaultPuppeteerOptions = {
-    headless: false,
+    headless: true,
     args: [
       "--disable-features=site-per-process --flag-switches-begin --disable-site-isolation-trials --flag-switches-end",
     ],
