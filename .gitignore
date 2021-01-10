@@ -6,3 +6,5 @@ bin/
 
 .DS_Store
 log.log
+run.sh
+src/tests/core/api-mock/server.js
