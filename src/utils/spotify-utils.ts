@@ -16,7 +16,7 @@ export const getSpotifyJSONForTrackList = async (
   const tracksAsSpotify = await Promise.all(
     trackJSONArr
       .map(async (trackJSON) => {
-
+        console.log(`Getting spotify JSON for ${trackJSON.title} by ${trackJSON.artist}`)
         await setTimeout(() => {}, 500)
         const tracks = await search(
           accessToken,
@@ -25,6 +25,7 @@ export const getSpotifyJSONForTrackList = async (
         );
 
         if (tracks.tracks.items.length > 0) {
+          console.log(`Selected JSON is ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`)
           return tracks.tracks.items[0];
         } else {
           return undefined;
