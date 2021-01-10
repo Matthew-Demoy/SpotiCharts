@@ -58,7 +58,7 @@ puppeteer
 
     //update top 100 chart playlists
     
-    /*
+    
     await updateTop100Chart(
       browser,
       "Bearer " + access_token,
@@ -103,7 +103,7 @@ puppeteer
       "https://www.beatport.com/genre/drum-and-bass/1/top-100",
       "Top 100, Drum and Bass"
     );
-    */
+    
     await updateTop100Chart(
       browser,
       "Bearer " + access_token,
