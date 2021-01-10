@@ -14,3 +14,12 @@
    
    
 </p>
+
+
+#### How to run
+
+<ol>
+  <li> run `npm install` </li>
+  <li> create a .env file with valid inputs for the following SPOTIFY_USERNAME, SPOTIFY_PASSWORD, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET</li>
+  <li> run `npm run start`</li>
+ </ol>
