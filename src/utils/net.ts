@@ -4,29 +4,28 @@ export const fetchRetry = async (
   url: string,
   options: any,
   retries: number = 3,
-  delay: number = 300
+  delay: number = 3
 ) => {
-  var tries = 0;
-  var success = false;
-  var res;
-  while (tries < retries && !success) {
-    res = await fetch(encodeURI(url), {
-      ...options,
-    });
 
-    if (res.status !== 429) {
-      success = true;
-      console.log("fetch success(not 429)");
+  
+  return fetch(encodeURI(url), {
+    ...options,
+  }).then(async (res) => {
+    if (res.ok) return res.json();
+    const retry = res.headers.get("Retry-After");
+    console.log("Timed Out: Waiting after " + retry + " seconds")
+    if (retries > 0) {
+      await setTimeout(() => {
+        return fetchRetry(
+          url,
+          options,
+          retries - 1,
+          parseInt(retry ?? delay.toString()) * 1000 * 2
+        );
+      }, parseInt(retry ?? delay.toString()) * 1000);
     } else {
-      const retry = res.headers.get("Retry-After");
-      console.log(
-        "Retrying " + url + " in " + retry + "seconds\n try number " + tries
-      );
-      await setTimeout(() => {}, parseInt(retry ?? "1000") * 1000);
+      throw new Error(await res.json())
     }
-    tries = tries + 1;
-  }
+  }).catch(e => {console.log(e)});
 
-  console.log("returning at try number " + tries)
-  return res;
 };
