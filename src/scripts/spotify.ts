@@ -27,9 +27,9 @@ export const createPlaylistFromCharts = async (
   access_token: string,
   user_id: string,
   chart_url: string,
-  name: string = ''
+  name: string = ""
 ) => {
-  startLog(name)
+  startLog(name);
   const page = await browser.newPage();
 
   await page.goto(chart_url);
@@ -47,6 +47,7 @@ export const createPlaylistFromCharts = async (
         continue;
       }
       console.log("adding chart data " + chartData);
+      
       //check if playlist exists for chart
       const recentPlaylists = await getPlaylists(access_token, 50);
       console.log("received playlist " + recentPlaylists);
@@ -56,7 +57,7 @@ export const createPlaylistFromCharts = async (
         }
       );
       if (exists) {
-        console.log("duplicate playlist found for chart - not adding");
+        console.log(`duplicate playlist found for chart ${chartData.title} - not adding`);
         continue;
       }
       //get spotify uris of tracks
@@ -89,16 +90,16 @@ export const createPlaylistFromCharts = async (
       console.log("playlist created " + playlist.name);
 
       console.log("adding tracks to playlist");
-      const playlistSnapshot = addTracksToPlaylist(
+      const playlistSnapshot = await addTracksToPlaylist(
         access_token,
         playlist.id,
         spotifyURIs
       );
 
       //add cover
-      await addCoverToPlayist(access_token, playlist.id, chartData.cover);
+      //await addCoverToPlayist(access_token, playlist.id, chartData.cover);
 
-      page.close();
+      
     } catch (e) {
       console.log("aborting current chart ");
     }
@@ -184,9 +185,9 @@ export const updateTop100Chart = async (
   access_token: string,
   playlistId: string,
   chartUrl: string,
-  name: string = ''
+  name: string = ""
 ) => {
-  startLog(name)
+  startLog(name);
   //get playlist track names and artists
   const currPlaylist = await getPlaylist(access_token, playlistId);
   if (currPlaylist === undefined) {
@@ -197,36 +198,43 @@ export const updateTop100Chart = async (
   const chartData = await getTracksFromTop100(browser, chartUrl);
 
   //for earch track in chart, see if it already exists in the playlist
-  const trackUris = await Promise.all(
-    chartData.map(async (chartTrack) => {
-      const match = currPlaylist.tracks?.items.find((playlistTrack) => {
-        return (
-          playlistTrack.track.name.toLowerCase() ===
-            chartTrack.track?.toLocaleLowerCase() &&
-          chartTrack.artist
-            ?.toLowerCase()
-            .includes(playlistTrack.track.artists[0].name.toLowerCase())
-        );
-      });
-      //if so copy spotify uri
-      if (match !== undefined) {
-        return match.track.uri;
-      }
+  var trackUris: any[] = [];
+  for (let i = 0; i < chartData.length; i++) {
+    const chartTrack = chartData[i];
 
-      const tracks = await search(
-        access_token,
-        chartTrack.track + "+" + chartTrack.artist,
-        SearchTypes.TRACK
+    console.log(`Adding #${i} ${chartTrack.track} by ${chartTrack.artist}`)
+    const match = currPlaylist.tracks?.items.find((playlistTrack) => {
+      return (
+        playlistTrack.track.name.toLowerCase() ===
+          chartTrack.track?.toLocaleLowerCase() &&
+        chartTrack.artist
+          ?.toLowerCase()
+          .includes(playlistTrack.track.artists[0].name.toLowerCase())
       );
-      //else find spotify url
-      if (tracks === undefined) {
-        return undefined;
-      }
-      if (tracks.tracks?.items.length > 0) {
-        return tracks.tracks.items[0].uri;
-      }
-    })
-  );
+    });
+
+    //if so copy spotify uri
+    if (match !== undefined) {
+      console.log(`Match Found for ${chartTrack.track} by ${chartTrack.artist}. \n uri = ${match.track.uri}`)
+      trackUris.push(match.track.uri);
+      continue;
+    }
+    console.log(`No match found for ${chartTrack.track} by ${chartTrack.artist}. \n Searching Spotify a likely Match`)
+    const tracks = await search(
+      access_token,
+      chartTrack.track + "+" + chartTrack.artist,
+      SearchTypes.TRACK
+    );
+    //else find spotify url
+    if (tracks === undefined) {
+      return undefined;
+    }
+    if (tracks.tracks?.items.length > 0) {
+      console.log(`Search found ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`)
+      trackUris.push(tracks.tracks.items[0].uri);
+    }
+  }
+  
 
   await setTimeout(() => {}, 5000);
   //call modifcation to playlist
@@ -235,7 +243,7 @@ export const updateTop100Chart = async (
     playlistId,
     trackUris.filter((uri) => {
       return uri !== undefined;
-    })
+    }).slice(0, 100)
   );
 
   return;
