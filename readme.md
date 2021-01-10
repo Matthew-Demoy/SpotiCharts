@@ -21,6 +21,6 @@
 <ol>
   <li> Clone the repository </li>
   <li> Run `npm install` </li>
-  <li> Create a .env file with valid inputs for the following : SPOTIFY_USERNAME, SPOTIFY_PASSWORD, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET</li>
+  <li> Create a .env file with valid inputs for the following : SPOTIFY_USERNAME, SPOTIFY_PASSWORD, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET </li>
   <li> Run `npm run start`</li>
  </ol>
