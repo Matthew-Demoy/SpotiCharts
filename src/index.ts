@@ -3,33 +3,20 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import dotenv from "dotenv";
-import { defaultTaskOptions } from "./fixtures/task-options";
-import { purchaseWalmart } from "./sites/Walmart/definition";
-import url from "url";
 
-import {
-  clickXPath,
-  typeXPath,
-  waitandRefreshForElement,
-} from "./utils/_puppeteerUtils";
-import fetch from "node-fetch";
 import { defaultPuppeteerOptions } from "./fixtures/puppeteer";
 import { AuthorizeAPI, getToken } from "./core/spotify/auth";
 import { createPlaylistFromCharts, updateTop100Chart } from "./scripts/spotify";
-import { server } from "./tests/core/api-mock/server";
-import { fetchRetry } from "./utils/net";
-import { endLog, startLog } from "./utils/logger";
+
 
 puppeteer.use(StealthPlugin());
 dotenv.config();
 
-const spotifyPassword = process.env.SPOTIFY_PASSWORD ?? "";
-const spotifyUsername = process.env.SPOTIFY_USERNAME ?? "";
+
 
 const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? "";
 const spotifyClientId = process.env.SPOTIFY_CLIENT_ID ?? "";
 
-const beatportUrl = "https://www.beatport.com/top-100";
 
 
 puppeteer
@@ -50,10 +37,7 @@ puppeteer
     // the code is used to get an access token
     const {
       access_token,
-      expires_in,
-      refresh_token,
-      scope,
-      token_type,
+
     } = await getToken(spotifyClientId, spotifyClientSecret, code);
 
     //update top 100 chart playlists

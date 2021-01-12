@@ -21,17 +21,6 @@ enum NextTask {
   SAME = "SAME"
 }
 
-enum WalmartTasks {
-  INITIALIZE = "INITIALIZE",
-  LOGIN = "LOGIN",
-  CHECK_AVAILABILITY = "CHECK_AVAILABILITY",
-  ADD_TO_CART = "ADD_TO_CART",
-  INIT_CHECKOUT = "INIT_CHECKOUT",
-  SELECT_DELIVERY = "SELECT_DELIVERY",
-  INPUT_DELIVERY_ADDRESS = "INPUT_DELIVERY_ADDRESS",
-  PAYMENT = "PAYMENT",
-  CONFIRM_CHECKOUT = "CONFIRM_CHECKOUT"
-}
 
 
 enum SearchTypes {
@@ -43,4 +32,4 @@ enum SearchTypes {
   EPISODE= "episode"
 
 }
-export { Status, NextTask, WalmartTasks, SearchTypes };
+export { Status, NextTask, SearchTypes };
