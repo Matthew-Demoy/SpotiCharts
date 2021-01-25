@@ -7,6 +7,7 @@ export const getTracksJSONFromApi = () => {};
 interface Track {
   title: string;
   artist: string;
+
 }
 
 export const getSpotifyJSONForTrackList = async (

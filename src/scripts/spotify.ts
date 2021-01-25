@@ -1,7 +1,9 @@
+import moment from "moment";
 import { Browser, Page } from "puppeteer";
 import {
   addCoverToPlayist,
   addTracksToPlaylist,
+  changePlaylistsDescription,
   createPlaylist,
   getPlaylist,
   getPlaylists,
@@ -47,7 +49,7 @@ export const createPlaylistFromCharts = async (
         continue;
       }
       console.log("adding chart data " + chartData);
-      
+
       //check if playlist exists for chart
       const recentPlaylists = await getPlaylists(access_token, 50);
       console.log("received playlist " + recentPlaylists);
@@ -57,7 +59,9 @@ export const createPlaylistFromCharts = async (
         }
       );
       if (exists) {
-        console.log(`duplicate playlist found for chart ${chartData.title} - not adding`);
+        console.log(
+          `duplicate playlist found for chart ${chartData.title} - not adding`
+        );
         continue;
       }
       //get spotify uris of tracks
@@ -98,8 +102,6 @@ export const createPlaylistFromCharts = async (
 
       //add cover
       //await addCoverToPlayist(access_token, playlist.id, chartData.cover);
-
-      
     } catch (e) {
       console.log("aborting current chart ");
     }
@@ -202,7 +204,7 @@ export const updateTop100Chart = async (
   for (let i = 0; i < chartData.length; i++) {
     const chartTrack = chartData[i];
 
-    console.log(`Adding #${i} ${chartTrack.track} by ${chartTrack.artist}`)
+    console.log(`Adding #${i} ${chartTrack.track} by ${chartTrack.artist}`);
     const match = currPlaylist.tracks?.items.find((playlistTrack) => {
       return (
         playlistTrack.track.name.toLowerCase() ===
@@ -215,11 +217,15 @@ export const updateTop100Chart = async (
 
     //if so copy spotify uri
     if (match !== undefined) {
-      console.log(`Match Found for ${chartTrack.track} by ${chartTrack.artist}. \n uri = ${match.track.uri}`)
+      console.log(
+        `Match Found for ${chartTrack.track} by ${chartTrack.artist}. \n uri = ${match.track.uri}`
+      );
       trackUris.push(match.track.uri);
       continue;
     }
-    console.log(`No match found for ${chartTrack.track} by ${chartTrack.artist}. \n Searching Spotify a likely Match`)
+    console.log(
+      `No match found for ${chartTrack.track} by ${chartTrack.artist}. \n Searching Spotify a likely Match`
+    );
     const tracks = await search(
       access_token,
       chartTrack.track + "+" + chartTrack.artist,
@@ -230,21 +236,36 @@ export const updateTop100Chart = async (
       return undefined;
     }
     if (tracks.tracks?.items.length > 0) {
-      console.log(`Search found ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`)
+      console.log(
+        `Search found ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`
+      );
       trackUris.push(tracks.tracks.items[0].uri);
     }
   }
-  
 
   await setTimeout(() => {}, 5000);
   //call modifcation to playlist
   await replacePlaylistItems(
     access_token,
     playlistId,
-    trackUris.filter((uri) => {
-      return uri !== undefined;
-    }).slice(0, 100)
+    trackUris
+      .filter((uri) => {
+        return uri !== undefined;
+      })
+      .slice(0, 100)
   );
 
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2, "0");
+  var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+  var yyyy = today.getFullYear();
+
+  const dateString = mm + "/" + dd + "/" + yyyy;
+
+  await changePlaylistsDescription(
+    access_token,
+    playlistId,
+    "Updated " + dateString
+  );
   return;
 };

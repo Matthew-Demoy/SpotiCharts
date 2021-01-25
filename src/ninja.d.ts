@@ -61,5 +61,15 @@ declare namespace Ninja {
     ShipmentInfo: ShipmentInfo;
   }
 
-  
+  interface TrackEntity {
+    id: number;
+
+    name: string;
+
+    artists: Artist;
+
+    spotifyId: string;
+
+    href: string;
+  }
 }
