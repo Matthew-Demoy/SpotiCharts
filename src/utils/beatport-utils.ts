@@ -28,8 +28,9 @@ export const getTracksFromTop100 = async (browser: Browser, url: string) => {
     (elements) => {
       const list = elements.map((e) => {
         return {
-          track: e.getAttribute("data-ec-name"),
-          artist: e.getAttribute("data-ec-d1"),
+          track: e.getAttribute("data-ec-name") || '',
+          artist: e.getAttribute("data-ec-d1")  || '' ,
+          href: e.querySelector('a')?.href || ''
         };
       });
 

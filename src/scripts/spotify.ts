@@ -1,7 +1,6 @@
-import moment from "moment";
 import { Browser, Page } from "puppeteer";
+import { getConnection, RelationQueryBuilder } from "typeorm";
 import {
-  addCoverToPlayist,
   addTracksToPlaylist,
   changePlaylistsDescription,
   createPlaylist,
@@ -10,6 +9,10 @@ import {
   replacePlaylistItems,
 } from "../core/spotify/playlist-api";
 import { search } from "../core/spotify/search-api";
+import { Playlist } from "../db/entity/playlist";
+import { Track } from "../db/entity/track";
+import { PlaylistRepository } from "../db/repositories/PlaylistRepository";
+import { TrackRepository } from "../db/repositories/TrackRepository";
 import { SearchTypes } from "../fixtures/enums";
 import {
   getChartsFromPage,
@@ -27,7 +30,7 @@ interface ChartData {
 export const createPlaylistFromCharts = async (
   browser: Browser,
   access_token: string,
-  user_id: string,
+
   chart_url: string,
   name: string = ""
 ) => {
@@ -80,7 +83,7 @@ export const createPlaylistFromCharts = async (
         .filter((e) => {
           return e !== undefined;
         })
-        .map((track) => {
+        .map((track: any) => {
           return track.uri;
         });
 
@@ -199,8 +202,75 @@ export const updateTop100Chart = async (
   //get chart track list
   const chartData = await getTracksFromTop100(browser, chartUrl);
 
-  //for earch track in chart, see if it already exists in the playlist
   var trackUris: any[] = [];
+  const connection = await getConnection();
+  const trackRepository = connection.getRepository(Track);
+  const playlistRepo = connection.getRepository(Playlist);
+  const playlistObject = await playlistRepo.findOne(
+    { name: name },
+    { relations: ["tracks"] }
+  );
+  
+  if (!playlistObject) {
+    return;
+  }
+  playlistObject.tracks.length = 0;
+  playlistRepo.save(playlistObject)
+  for await (const track of chartData) {
+    const match = await trackRepository.findOne(
+      { name: track.track },
+      { relations: ["artists"] }
+    );
+    if (match) {
+      console.log(`Match Found for ${track.track} by ${track.artist}.`);
+
+      playlistRepo.save({
+        ...playlistObject,
+        tracks: [...playlistObject.tracks, match],
+      });
+
+      trackUris.push(match?.href);
+    } else {
+      console.log(
+        `No match found for ${track.track} by ${track.artist}. \n Searching Spotify a likely Match`
+      );
+      const tracks = await search(
+        access_token,
+        track.track + "+" + track.artist,
+        SearchTypes.TRACK
+      );
+      //else find spotify url
+      if (tracks === undefined) {
+        return undefined;
+      }
+      if (tracks.tracks?.items.length > 0) {
+        const match = tracks.tracks.items[0];
+        console.log(`Search found ${match.name} by ${match.artists[0].name}`);
+
+        trackUris.push(tracks.tracks.items[0].uri);
+        const trackDto = {
+          name: match.name,
+          artists: match.artists.map((e: any) => {
+            return { name: e.name };
+          }),
+          spotifyId: match.uri,
+          href: track.href,
+        };
+        // const track = await trackRepository.insert(trackDto))
+        /*
+        connection.createQueryBuilder()
+        .relation(Playlist, 'tracks')
+        .of(playlistObject)
+        .add(trackDto)
+        */
+       const existing = await trackRepository.findOne({name: trackDto.name}, 
+        { relations: ["artists"] })
+        playlistObject.tracks.push(existing || await trackRepository.save(trackDto));
+        playlistRepo.save(playlistObject);
+      }
+    }
+  }
+  //for earch track in chart, see if it already exists in the playlist
   for (let i = 0; i < chartData.length; i++) {
     const chartTrack = chartData[i];
 
@@ -214,33 +284,6 @@ export const updateTop100Chart = async (
           .includes(playlistTrack.track.artists[0].name.toLowerCase())
       );
     });
-
-    //if so copy spotify uri
-    if (match !== undefined) {
-      console.log(
-        `Match Found for ${chartTrack.track} by ${chartTrack.artist}. \n uri = ${match.track.uri}`
-      );
-      trackUris.push(match.track.uri);
-      continue;
-    }
-    console.log(
-      `No match found for ${chartTrack.track} by ${chartTrack.artist}. \n Searching Spotify a likely Match`
-    );
-    const tracks = await search(
-      access_token,
-      chartTrack.track + "+" + chartTrack.artist,
-      SearchTypes.TRACK
-    );
-    //else find spotify url
-    if (tracks === undefined) {
-      return undefined;
-    }
-    if (tracks.tracks?.items.length > 0) {
-      console.log(
-        `Search found ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`
-      );
-      trackUris.push(tracks.tracks.items[0].uri);
-    }
   }
 
   await setTimeout(() => {}, 5000);

@@ -72,4 +72,16 @@ declare namespace Ninja {
 
     href: string;
   }
+
+  interface SearchResult {
+    tracks: {
+      items: {
+        name: string,
+        uri: string,
+        artists: {
+          name: string
+        }[]
+      }[]
+    }
+  }
 }

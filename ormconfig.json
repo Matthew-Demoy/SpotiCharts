@@ -7,13 +7,13 @@
     "database": "beatcharts",
     "synchronize": true,
     "entities": [
-      "src/entity/*.js"
+      "src/db/entity/**/*.ts"
     ],
     "subscribers": [
-      "src/subscriber/*.js"
+      "src/db/subscriber/*.ts"
     ],
     "migrations": [
-      "src/migration/*.js"
+      "src/db/migration/*.ts"
     ],
     "cli": {
       "entitiesDir": "src/db/entity/**/*.ts",
