@@ -11,6 +11,9 @@ import { getConnection } from "typeorm";
 import { get } from "http";
 import { Playlist } from "./db/entity/playlist";
 import { PlaylistSource } from "./db/entity/playlist-source";
+import { addCoverToPlayist } from "./core/spotify/playlist-api";
+import { getFileAsBase64 } from "./core/file-system";
+import { exit } from "process";
 
 const updatePlaylists = async () => {
   puppeteer.use(StealthPlugin());
@@ -33,24 +36,27 @@ const updatePlaylists = async () => {
         code
       );
 
-      const topCharts = await getConnection().getRepository(Playlist).find({isTop100:true})
-      
-      for(const chart of topCharts)
-      {
-            //update top 100 chart playlists
-          await updateTop100Chart(
-            browser,
-            "Bearer " + access_token,
-            chart.spotifyLink,
-            chart.beatportLink,
-            chart.name
-          );
-        }
-      
-      const playlistSources = await getConnection().getRepository(PlaylistSource).find() 
-      
-      for(const source of playlistSources)
-      {
+      /*
+      const topCharts = await getConnection()
+        .getRepository(Playlist)
+        .find({ isTop100: true });
+
+      for (const chart of topCharts) {
+        //update top 100 chart playlists
+        await updateTop100Chart(
+          browser,
+          "Bearer " + access_token,
+          chart.spotifyLink,
+          chart.beatportLink,
+          chart.name
+        );
+      }
+      */
+      const playlistSources = await getConnection()
+        .getRepository(PlaylistSource)
+        .find();
+
+      for (const source of playlistSources) {
         await createPlaylistFromCharts(
           browser,
           "Bearer " + access_token,

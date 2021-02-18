@@ -11,7 +11,7 @@ export class Track {
     @Column()
     name: string = '';
     
-    @ManyToMany(type => Artist, artist => artist.tracks, {cascade: true})
+    @ManyToMany(type => Artist, artist => artist.tracks, {cascade: true, eager:true} )
     @JoinTable()
     artists!: Artist[];
 

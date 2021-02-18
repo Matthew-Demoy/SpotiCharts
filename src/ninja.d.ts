@@ -85,3 +85,14 @@ declare namespace Ninja {
     }
   }
 }
+interface Track {
+  title: string;
+  artist: string;
+  href:string 
+}
+interface ChartData {
+  title: string;
+  cover: any;
+  tracks:Track[];
+  description: string;
+}

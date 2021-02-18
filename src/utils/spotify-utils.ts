@@ -4,11 +4,7 @@ import { SearchTypes } from "../fixtures/enums";
 
 export const getTracksJSONFromApi = () => {};
 
-interface Track {
-  title: string;
-  artist: string;
 
-}
 
 export const getSpotifyJSONForTrackList = async (
   accessToken: string,
@@ -27,7 +23,7 @@ export const getSpotifyJSONForTrackList = async (
 
         if (tracks.tracks.items.length > 0) {
           console.log(`Selected JSON is ${tracks.tracks.items[0].name} by ${tracks.tracks.items[0].artists[0].name}`)
-          return tracks.tracks.items[0];
+          return {...tracks.tracks.items[0], href: trackJSON.href};
         } else {
           return undefined;
         }

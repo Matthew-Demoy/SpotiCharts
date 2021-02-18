@@ -89,14 +89,14 @@ export const addCoverToPlayist = async (
       {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "image/jpeg",
           Authorization: accessToken,
         },
         body: img,
       }
     );
 
-    return await res.json;
+    return await res.json();
   } catch (e) {
     console.log("error in addCoverToPlayList" + e);
   }
@@ -126,7 +126,10 @@ export const changePlaylistsDescription = async (
   }
 };
 
-export const getPlaylist = async (accessToken: string, playlistId: string) : Promise<SpotifyApi.PlaylistObjectFull | undefined>=> {
+export const getPlaylist = async (
+  accessToken: string,
+  playlistId: string
+): Promise<SpotifyApi.PlaylistObjectFull | undefined> => {
   try {
     var res = await fetch(
       `https://api.spotify.com/v1/playlists/${playlistId}`,
@@ -162,8 +165,8 @@ export const replacePlaylistItems = async (
       }
     );
 
-    console.log(res.status)
-    console.log(await res.json())
+    console.log(res.status);
+    console.log(await res.json());
     return await res.json();
   } catch (e) {
     console.log("error in changePlaylistDescription " + e);

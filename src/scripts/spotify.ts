@@ -1,6 +1,10 @@
+import fs from 'fs'
 import { Browser, Page } from "puppeteer";
 import { getConnection, RelationQueryBuilder } from "typeorm";
+import { uploadBase64Object } from "../core/aws/aws";
+import { download, getFileAsBase64 } from '../core/file-system';
 import {
+  addCoverToPlayist,
   addTracksToPlaylist,
   changePlaylistsDescription,
   createPlaylist,
@@ -21,12 +25,6 @@ import {
 import { startLog } from "../utils/logger";
 import { getSpotifyJSONForTrackList } from "../utils/spotify-utils";
 
-interface ChartData {
-  title: string;
-  cover: any;
-  tracks: { title: string; artist: string }[];
-  description: string;
-}
 export const createPlaylistFromCharts = async (
   browser: Browser,
   access_token: string,
@@ -67,6 +65,10 @@ export const createPlaylistFromCharts = async (
         );
         continue;
       }
+      const connection = await getConnection();
+      const trackRepository = connection.getRepository(Track);
+      const playlistRepo = connection.getRepository(Playlist);
+      const tracksForPlaylist = [];
       //get spotify uris of tracks
       const tracksAsSpotifyJSON = await getSpotifyJSONForTrackList(
         access_token,
@@ -79,13 +81,34 @@ export const createPlaylistFromCharts = async (
       );
 
       //add tracks
-      const spotifyURIs = tracksAsSpotifyJSON
-        .filter((e) => {
-          return e !== undefined;
-        })
-        .map((track: any) => {
-          return track.uri;
-        });
+      const trackJSONCleaned = tracksAsSpotifyJSON.filter((e) => {
+        return e !== undefined;
+      });
+
+      for (const track of trackJSONCleaned) {
+        const match = await trackRepository.findOne(
+          { name: track?.name },
+          { relations: ["artists"] }
+        );
+
+        if (!match && track) {
+          const trackDto = {
+            name: track.name,
+            artists: track.artists.map((e: any) => {
+              return { name: e.name };
+            }),
+            spotifyId: track.uri,
+            href: track.href,
+          };
+          tracksForPlaylist.push(await trackRepository.save(trackDto));
+        } else if (match) {
+          tracksForPlaylist.push(match);
+        }
+      }
+
+      const spotifyURIs = trackJSONCleaned.map((track: any) => {
+        return track.uri;
+      });
 
       //create playlist
       const playlist = await createPlaylist(
@@ -97,14 +120,24 @@ export const createPlaylistFromCharts = async (
       console.log("playlist created " + playlist.name);
 
       console.log("adding tracks to playlist");
-      const playlistSnapshot = await addTracksToPlaylist(
-        access_token,
-        playlist.id,
-        spotifyURIs
+      await addTracksToPlaylist(access_token, playlist.id, spotifyURIs);
+      //add cover
+      await download(chartData.cover, './image.jpg')
+      //await addCoverToPlayist(access_token, playlist.id, getFileAsBase64('./image.jpg'));
+      const s3Obj = await uploadBase64Object(
+        chartData.title.split(' ').join('') + "-cover.jpg",
+        './image.jpg'
       );
 
-      //add cover
-      //await addCoverToPlayist(access_token, playlist.id, chartData.cover);
+      //save all playlist data into database
+      playlistRepo.save({
+        name: chartData.title,
+        beatportLink: chart?.chartUrl || "beatport.com",
+        spotifyLink: playlist.id,
+        tracks: tracksForPlaylist,
+        cover: s3Obj.Key,
+        isTop100: false,
+      });
     } catch (e) {
       console.log("aborting current chart ");
     }
@@ -129,6 +162,7 @@ export const getChartData = async (
         return {
           title: e.getAttribute("data-ec-name") ?? "",
           artist: e.getAttribute("data-ec-d1") ?? "",
+          href: e.querySelector("a")?.href || "",
         };
       })
     );
@@ -170,13 +204,9 @@ export const getChartData = async (
       " - https://www.beatport.com" +
       chart.chartUrl;
 
-    await page.goto(coverURL ?? "");
-
-    const chartCover = await page.screenshot({ encoding: "base64" });
-    page.close();
     return {
       title: chartTitle ?? "Chart",
-      cover: chartCover,
+      cover: coverURL,
       tracks: songList,
       description: description,
     };
@@ -210,12 +240,12 @@ export const updateTop100Chart = async (
     { name: name },
     { relations: ["tracks"] }
   );
-  
+
   if (!playlistObject) {
     return;
   }
   playlistObject.tracks.length = 0;
-  playlistRepo.save(playlistObject)
+  playlistRepo.save(playlistObject);
   for await (const track of chartData) {
     const match = await trackRepository.findOne(
       { name: track.track },
@@ -256,34 +286,16 @@ export const updateTop100Chart = async (
           spotifyId: match.uri,
           href: track.href,
         };
-        // const track = await trackRepository.insert(trackDto))
-        /*
-        connection.createQueryBuilder()
-        .relation(Playlist, 'tracks')
-        .of(playlistObject)
-        .add(trackDto)
-        */
-       const existing = await trackRepository.findOne({name: trackDto.name}, 
-        { relations: ["artists"] })
-        playlistObject.tracks.push(existing || await trackRepository.save(trackDto));
+        const existing = await trackRepository.findOne(
+          { name: trackDto.name },
+          { relations: ["artists"] }
+        );
+        playlistObject.tracks.push(
+          existing || (await trackRepository.save(trackDto))
+        );
         playlistRepo.save(playlistObject);
       }
     }
-  }
-  //for earch track in chart, see if it already exists in the playlist
-  for (let i = 0; i < chartData.length; i++) {
-    const chartTrack = chartData[i];
-
-    console.log(`Adding #${i} ${chartTrack.track} by ${chartTrack.artist}`);
-    const match = currPlaylist.tracks?.items.find((playlistTrack) => {
-      return (
-        playlistTrack.track.name.toLowerCase() ===
-          chartTrack.track?.toLocaleLowerCase() &&
-        chartTrack.artist
-          ?.toLowerCase()
-          .includes(playlistTrack.track.artists[0].name.toLowerCase())
-      );
-    });
   }
 
   await setTimeout(() => {}, 5000);
