@@ -1,28 +1,32 @@
 require('dotenv').config()
 import "reflect-metadata";
-import { createConnection, getCustomRepository } from "typeorm";
+import { createConnection } from "typeorm";
 import express from "express";
 import * as bodyParser from "body-parser";
-import { TrackRepository } from "./db/repositories/TrackRepository";
-import config from "../ormconfig.json";
+import config from "../ormconfig";
 import entities from "./db/entity/index";
-import { Track } from "./db/entity/track";
-import updatePlaylists from "./update";
-import { seedCharts, seedSources } from "./seed";
 import { Playlist } from "./db/entity/playlist";
-import { exit } from "process";
-import { testupload } from "./test/upload";
-
+import cron from 'node-cron'
+import { SubTaskFactory } from "./core/subtask-definition";
+import { seedCharts, seedSources } from "./seed";
+import updatePlaylists from "./update";
 // create connection with database
 // note that it's not active database connection
 // TypeORM creates connection pools and uses them for your requests
+var updateTask = cron.schedule('* * 1,13 * *',async () =>  {
+  await updatePlaylists()
+  console.log('cron update complete')
+}, {
+  scheduled: false
+});
+ 
+updateTask.start()
 
 
 createConnection({ ...config, entities } as any)
   .then(async (connection) => {
        
-   // await seedCharts()
-   // await seedSources()
+
    // await updatePlaylists()
     // create express app
     
@@ -34,22 +38,14 @@ createConnection({ ...config, entities } as any)
     // run app
     app.listen(8000);
 
-    const trackRepository = connection.getRepository(Track)
-
-    const testTrack: Track = {
-      id: 1,
-      name: "item",
-      spotifyId: "123",
-      href: "",
-      artists: [],
-      playlists:  []
-    };
-    // trackRepository.save(testTrack)
-
-    app.get("/", async (req, res) => {
-      const tracks = await trackRepository.find();
-      console.log(tracks);
-      res.send(tracks);
+    app.get("/seed/", async (req,res) => {
+      console.log('seeding db  (if empty)')
+      await seedCharts()
+      await seedSources()
+    })
+    app.get("/update/", async (req, res) => {
+      await updatePlaylists()
+      console.log('forced update complete')
     });
 
     app.get("/charts/top-100", async (req, res) => {

@@ -36,7 +36,7 @@ const updatePlaylists = async () => {
         code
       );
 
-      /*
+      
       const topCharts = await getConnection()
         .getRepository(Playlist)
         .find({ isTop100: true });
@@ -51,7 +51,7 @@ const updatePlaylists = async () => {
           chart.name
         );
       }
-      */
+      
       const playlistSources = await getConnection()
         .getRepository(PlaylistSource)
         .find();

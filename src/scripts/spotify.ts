@@ -1,10 +1,9 @@
-import fs from 'fs'
+import fs from "fs";
 import { Browser, Page } from "puppeteer";
-import { getConnection, RelationQueryBuilder } from "typeorm";
+import { getConnection } from "typeorm";
 import { uploadBase64Object } from "../core/aws/aws";
-import { download, getFileAsBase64 } from '../core/file-system';
+import { download } from "../core/file-system";
 import {
-  addCoverToPlayist,
   addTracksToPlaylist,
   changePlaylistsDescription,
   createPlaylist,
@@ -15,8 +14,6 @@ import {
 import { search } from "../core/spotify/search-api";
 import { Playlist } from "../db/entity/playlist";
 import { Track } from "../db/entity/track";
-import { PlaylistRepository } from "../db/repositories/PlaylistRepository";
-import { TrackRepository } from "../db/repositories/TrackRepository";
 import { SearchTypes } from "../fixtures/enums";
 import {
   getChartsFromPage,
@@ -32,6 +29,10 @@ export const createPlaylistFromCharts = async (
   chart_url: string,
   name: string = ""
 ) => {
+  const connection = await getConnection();
+  const trackRepository = connection.getRepository(Track);
+  const playlistRepo = connection.getRepository(Playlist);
+
   startLog(name);
   const page = await browser.newPage();
 
@@ -51,23 +52,14 @@ export const createPlaylistFromCharts = async (
       }
       console.log("adding chart data " + chartData);
 
-      //check if playlist exists for chart
-      const recentPlaylists = await getPlaylists(access_token, 50);
-      console.log("received playlist " + recentPlaylists);
-      const exists = recentPlaylists.items.some(
-        (playlist: SpotifyApi.TrackObjectSimplified) => {
-          return playlist.name === chartData.title;
-        }
-      );
-      if (exists) {
+      const existingPlaylist = playlistRepo.findOne({name: chartData.title})
+      if (existingPlaylist) {
         console.log(
           `duplicate playlist found for chart ${chartData.title} - not adding`
         );
         continue;
       }
-      const connection = await getConnection();
-      const trackRepository = connection.getRepository(Track);
-      const playlistRepo = connection.getRepository(Playlist);
+
       const tracksForPlaylist = [];
       //get spotify uris of tracks
       const tracksAsSpotifyJSON = await getSpotifyJSONForTrackList(
@@ -122,19 +114,30 @@ export const createPlaylistFromCharts = async (
       console.log("adding tracks to playlist");
       await addTracksToPlaylist(access_token, playlist.id, spotifyURIs);
       //add cover
-      await download(chartData.cover, './image.jpg')
+      await download(chartData.cover, "./image.jpg");
       //await addCoverToPlayist(access_token, playlist.id, getFileAsBase64('./image.jpg'));
       const s3Obj = await uploadBase64Object(
-        chartData.title.split(' ').join('') + "-cover.jpg",
-        './image.jpg'
+        chartData.title.split(" ").join("") + "-cover.jpg",
+        "./image.jpg"
       );
 
       //save all playlist data into database
+      var uniqueTrackNames: string[]  = []
+      const uniqueTracks = tracksForPlaylist.filter(track => {
+        if(uniqueTrackNames.includes(track.name))
+        {
+         return  false
+        }else{
+          uniqueTrackNames.push(track.name)
+          return true
+        }
+      })
+
       playlistRepo.save({
         name: chartData.title,
         beatportLink: chart?.chartUrl || "beatport.com",
         spotifyLink: playlist.id,
-        tracks: tracksForPlaylist,
+        tracks: uniqueTracks,
         cover: s3Obj.Key,
         isTop100: false,
       });
@@ -159,8 +162,12 @@ export const getChartData = async (
 
     const songList = await page.$$eval(".bucket-item", (e) =>
       e.map((e) => {
+        const songTitle = e.getAttribute("data-ec-name") ?? "" 
+        const remix  =   e.getAttribute("data-ec-d2") !== null   &&  e.getAttribute("data-ec-d2") !== ''
+        ? " - " + e.getAttribute("data-ec-d2") + " Remix"
+        : ""
         return {
-          title: e.getAttribute("data-ec-name") ?? "",
+          title: songTitle + remix,
           artist: e.getAttribute("data-ec-d1") ?? "",
           href: e.querySelector("a")?.href || "",
         };
@@ -236,7 +243,7 @@ export const updateTop100Chart = async (
   const connection = await getConnection();
   const trackRepository = connection.getRepository(Track);
   const playlistRepo = connection.getRepository(Playlist);
-  const playlistObject = await playlistRepo.findOne(
+  var playlistObject = await playlistRepo.findOne(
     { name: name },
     { relations: ["tracks"] }
   );
@@ -245,6 +252,7 @@ export const updateTop100Chart = async (
     return;
   }
   playlistObject.tracks.length = 0;
+  playlistObject.lastUpdated =  new Date() 
   playlistRepo.save(playlistObject);
   for await (const track of chartData) {
     const match = await trackRepository.findOne(
@@ -252,6 +260,22 @@ export const updateTop100Chart = async (
       { relations: ["artists"] }
     );
     if (match) {
+
+      playlistObject = await playlistRepo.findOne(
+        { name: name },
+        { relations: ["tracks"] }
+      );
+
+      if (!playlistObject) {
+        return;
+      }
+
+      if(playlistObject.tracks.find(playlistTrack =>  {
+        return playlistTrack.name  === match.name
+      })){
+        break;
+      }
+      
       console.log(`Match Found for ${track.track} by ${track.artist}.`);
 
       playlistRepo.save({
@@ -278,6 +302,7 @@ export const updateTop100Chart = async (
         console.log(`Search found ${match.name} by ${match.artists[0].name}`);
 
         trackUris.push(tracks.tracks.items[0].uri);
+
         const trackDto = {
           name: match.name,
           artists: match.artists.map((e: any) => {
@@ -290,6 +315,23 @@ export const updateTop100Chart = async (
           { name: trackDto.name },
           { relations: ["artists"] }
         );
+
+        playlistObject = await playlistRepo.findOne(
+          { name: name },
+          { relations: ["tracks"] }
+        );
+  
+        if (!playlistObject) {
+          return;
+        }
+  
+        if(playlistObject.tracks.find(playlistTrack =>  {
+          return (playlistTrack.name  === trackDto.name) || (playlistTrack.name === existing?.name)
+        })){
+          break;
+        }
+        
+        
         playlistObject.tracks.push(
           existing || (await trackRepository.save(trackDto))
         );
