@@ -1,9 +1,9 @@
 version: 0.1
+phases:
+  build:
+    commands:
+      - npm install
 
-build:
-  commands:
-    - npm install
-
-artifacts:
-  files:
-    - '**/*'
+  artifacts:
+    files:
+      - "**/*"
