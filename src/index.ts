@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import express from "express";
 import * as bodyParser from "body-parser";
-import config from "../ormconfig";
+import config from "./ormconfig";
 import entities from "./db/entity/index";
 import { Playlist } from "./db/entity/playlist";
 import cron from 'node-cron'
