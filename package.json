@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "nodemon",
-    "build": "rimraf ./build && tsc",
-    "start:prod": "npm run build && node build/index.js"
+    "start": "node bin/index.js",
+    "watch": "nodemon",
+    "build": "rimraf ./bin && tsc",
+    "start:prod": "npm run build && node bin/index.js"
   },
   "author": "",
   "license": "ISC",
