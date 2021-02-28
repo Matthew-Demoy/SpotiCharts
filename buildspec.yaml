@@ -4,6 +4,6 @@ phases:
     commands:
       - npm install
 
-  artifacts:
-    files:
-      - "**/*"
+artifacts:
+  files:
+    - "**/*"
