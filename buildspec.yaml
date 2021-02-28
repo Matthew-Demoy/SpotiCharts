@@ -5,7 +5,7 @@ phases:
       nodejs: 10
     commands:
       - npm install -g typescript
-  pre-build:
+  pre_build:
     commands:
       - echo Installing source NPM dependencies...
       - npm install

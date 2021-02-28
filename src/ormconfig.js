@@ -1,9 +1,9 @@
 module.exports = {
     "type": "postgres",
-    "host": "localhost",
+    "host": proces.env.DB_HOST,
     "port": 5432,
-    "username": "postgres",
-    "password": "password",
+    "username": process.env.DB_USERNAME,
+    "password": process.env.DB_PASSWORD,
     "database": "beatcharts",
     "synchronize": true,
     "entities": [
