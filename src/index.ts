@@ -36,7 +36,7 @@ createConnection({ ...config, entities } as any)
     // register all application routes
 
     // run app
-    app.listen(8081);
+    app.listen(8080);
 
     app.get("/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
@@ -57,6 +57,6 @@ createConnection({ ...config, entities } as any)
       res.send(playlist);
     });
 
-    console.log("Express application is up and running on port 8081");
+    console.log("Express application is up and running on port 8080");
   })
   .catch((error) => console.log("TypeORM connection error: ", error));

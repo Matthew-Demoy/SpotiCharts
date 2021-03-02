@@ -70,7 +70,7 @@ export const AuthorizeAPI = async (browser: Browser) => {
     const headers = request.headers();
     headers["client_id"] = "292abb096d7e423180ba871ac237468e" || "";
     headers["response_type"] = "code";
-    headers["redirect_uri"] = `localhost:8081/success`;
+    headers["redirect_uri"] = `localhost:8080/success`;
     request.continue({ headers });
   });
   const spotifyUrlParmas = new URLSearchParams({
