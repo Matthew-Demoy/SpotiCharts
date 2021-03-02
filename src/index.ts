@@ -36,7 +36,7 @@ createConnection({ ...config, entities } as any)
     // register all application routes
 
     // run app
-    app.listen(8000);
+    app.listen(8081);
 
     app.get("/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
