@@ -38,6 +38,10 @@ createConnection({ ...config, entities } as any)
     // run app
     app.listen(8080);
 
+    app.get("/", async (req,res) => {
+      res.send('success beat-chart');
+    })
+
     app.get("/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
       await seedCharts()
