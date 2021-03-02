@@ -57,6 +57,6 @@ createConnection({ ...config, entities } as any)
       res.send(playlist);
     });
 
-    console.log("Express application is up and running on port 8000");
+    console.log("Express application is up and running on port 8081");
   })
   .catch((error) => console.log("TypeORM connection error: ", error));
