@@ -46,10 +46,11 @@ createConnection({ ...config, entities } as any)
       console.log('seeding db  (if empty)')
       await seedCharts()
       await seedSources()
+      res.send('seed success')
     })
     app.get("/update/", async (req, res) => {
       await updatePlaylists()
-      console.log('forced update complete')
+      res.send('forced update complete')
     });
 
     app.get("/charts/top-100", async (req, res) => {
