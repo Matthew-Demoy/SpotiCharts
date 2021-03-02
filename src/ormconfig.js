@@ -4,7 +4,7 @@ module.exports = {
     "port": 5432,
     "username": process.env.DB_USERNAME,
     "password": process.env.DB_PASSWORD,
-    "database": "beatcharts",
+    "database": process.env.DB_NAME,
     "synchronize": true,
     "entities": [
       "src/db/entity/**/*.ts"
