@@ -38,22 +38,22 @@ createConnection({ ...config, entities } as any)
     // run app
     app.listen(8080);
 
-    app.get("/", async (req,res) => {
+    app.get("/api/", async (req,res) => {
       res.send('success beat-chart');
     })
 
-    app.get("/seed/", async (req,res) => {
+    app.get("/api/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
       await seedCharts()
       await seedSources()
       res.send('seed success')
     })
-    app.get("/update/", async (req, res) => {
+    app.get("/api/update/", async (req, res) => {
       await updatePlaylists()
       res.send('forced update complete')
     });
 
-    app.get("/charts/top-100", async (req, res) => {
+    app.get("/api/charts/top-100", async (req, res) => {
       const   isTop100  = req.query.isTop100 || false
       const playlist = await connection.getRepository(Playlist).find({relations: ['tracks'], where : {
         isTop100
