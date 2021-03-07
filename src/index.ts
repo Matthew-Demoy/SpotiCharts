@@ -38,18 +38,18 @@ createConnection({ ...config, entities } as any)
     app.listen(8080);
 
     app.get("/", async (req,res) => {
-      res.send('success beat-chart');
+      res.status(200).send('success beat-chart');
     })
 
     app.get("/api/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
       await seedCharts()
       await seedSources()
-      res.send('seed success')
+      res.status(200).send('seed success')
     })
     app.get("/api/update/", async (req, res) => {
       await updatePlaylists()
-      res.send('forced update complete')
+      res.status(200).send('forced update complete')
     });
 
     app.get("/api/charts/top-100", async (req, res) => {
@@ -58,7 +58,7 @@ createConnection({ ...config, entities } as any)
         isTop100
       }})
       
-      res.send(playlist);
+      res.status(200).send(playlist);
     });
 
     console.log("Express application is up and running on port 8080");
