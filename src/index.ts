@@ -7,7 +7,6 @@ import config from "./ormconfig";
 import entities from "./db/entity/index";
 import { Playlist } from "./db/entity/playlist";
 import cron from 'node-cron'
-import { SubTaskFactory } from "./core/subtask-definition";
 import { seedCharts, seedSources } from "./seed";
 import updatePlaylists from "./update";
 // create connection with database
@@ -42,18 +41,18 @@ createConnection({ ...config, entities } as any)
       res.send('success beat-chart');
     })
 
-    app.get("/seed/", async (req,res) => {
+    app.get("/api/seed/", async (req,res) => {
       console.log('seeding db  (if empty)')
       await seedCharts()
       await seedSources()
       res.send('seed success')
     })
-    app.get("/update/", async (req, res) => {
+    app.get("/api/update/", async (req, res) => {
       await updatePlaylists()
       res.send('forced update complete')
     });
 
-    app.get("/charts/top-100", async (req, res) => {
+    app.get("/api/charts/top-100", async (req, res) => {
       const   isTop100  = req.query.isTop100 || false
       const playlist = await connection.getRepository(Playlist).find({relations: ['tracks'], where : {
         isTop100
