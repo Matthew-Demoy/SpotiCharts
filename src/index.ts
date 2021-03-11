@@ -9,6 +9,7 @@ import { Playlist } from "./db/entity/playlist";
 import cron from 'node-cron'
 import { seedCharts, seedSources } from "./seed";
 import updatePlaylists from "./update";
+import cors from 'cors'
 // create connection with database
 // note that it's not active database connection
 // TypeORM creates connection pools and uses them for your requests
@@ -30,6 +31,7 @@ createConnection({ ...config, entities } as any)
     // create express app
     
     const app = express();
+    app.use(cors())
     app.use(bodyParser.json());
 
     // register all application routes
