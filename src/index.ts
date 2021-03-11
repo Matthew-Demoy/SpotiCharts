@@ -54,7 +54,7 @@ createConnection({ ...config, entities } as any)
       res.status(200).send('forced update complete')
     });
 
-    app.get("/api/charts/top-100", async (req, res) => {
+    app.get("/api/charts", async (req, res) => {
       const   isTop100  = req.query.isTop100 || false
       const playlist = await connection.getRepository(Playlist).find({relations: ['tracks'], where : {
         isTop100
