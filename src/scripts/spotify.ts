@@ -48,9 +48,8 @@ export const createPlaylistFromCharts = async (
       if (chartData === undefined) {
         continue;
       }
-      console.log("adding chart data " + chartData);
 
-      const existingPlaylist = playlistRepo.findOne({name: chartData.title})
+      const existingPlaylist = playlistRepo.findOne({ name: chartData.title });
       if (existingPlaylist) {
         console.log(
           `duplicate playlist found for chart ${chartData.title} - not adding`
@@ -108,8 +107,6 @@ export const createPlaylistFromCharts = async (
         chartData.description
       );
       console.log("playlist created " + playlist.name);
-
-      console.log("adding tracks to playlist");
       await addTracksToPlaylist(access_token, playlist.id, spotifyURIs);
       //add cover
       await download(chartData.cover, "./image.jpg");
@@ -120,16 +117,15 @@ export const createPlaylistFromCharts = async (
       );
 
       //save all playlist data into database
-      var uniqueTrackNames: string[]  = []
-      const uniqueTracks = tracksForPlaylist.filter(track => {
-        if(uniqueTrackNames.includes(track.name))
-        {
-         return  false
-        }else{
-          uniqueTrackNames.push(track.name)
-          return true
+      var uniqueTrackNames: string[] = [];
+      const uniqueTracks = tracksForPlaylist.filter((track) => {
+        if (uniqueTrackNames.includes(track.name)) {
+          return false;
+        } else {
+          uniqueTrackNames.push(track.name);
+          return true;
         }
-      })
+      });
 
       playlistRepo.save({
         name: chartData.title,
@@ -160,10 +156,12 @@ export const getChartData = async (
 
     const songList = await page.$$eval(".bucket-item", (e) =>
       e.map((e) => {
-        const songTitle = e.getAttribute("data-ec-name") ?? "" 
-        const remix  =   e.getAttribute("data-ec-d2") !== null   &&  e.getAttribute("data-ec-d2") !== ''
-        ? " - " + e.getAttribute("data-ec-d2") + " Remix"
-        : ""
+        const songTitle = e.getAttribute("data-ec-name") ?? "";
+        const remix =
+          e.getAttribute("data-ec-d2") !== null &&
+          e.getAttribute("data-ec-d2") !== ""
+            ? " - " + e.getAttribute("data-ec-d2") + " Remix"
+            : "";
         return {
           title: songTitle + remix,
           artist: e.getAttribute("data-ec-d1") ?? "",
@@ -250,7 +248,7 @@ export const updateTop100Chart = async (
     return;
   }
   playlistObject.tracks.length = 0;
-  playlistObject.lastUpdated =  new Date() 
+  playlistObject.lastUpdated = new Date();
   playlistRepo.save(playlistObject);
   for await (const track of chartData) {
     const match = await trackRepository.findOne(
@@ -258,7 +256,6 @@ export const updateTop100Chart = async (
       { relations: ["artists"] }
     );
     if (match) {
-
       playlistObject = await playlistRepo.findOne(
         { name: name },
         { relations: ["tracks"] }
@@ -268,21 +265,21 @@ export const updateTop100Chart = async (
         return;
       }
 
-      if(playlistObject.tracks.find(playlistTrack =>  {
-        return playlistTrack.name  === match.name
-      })){
-        continue
+      if (
+        playlistObject.tracks.find((playlistTrack) => {
+          return playlistTrack.name === match.name;
+        })
+      ) {
+        continue;
       }
-      
-      console.log("adding match " + match.name)
+
       playlistRepo.save({
         ...playlistObject,
         tracks: [...playlistObject.tracks, match],
       });
-      console.log("added match " + match.name)
+
       trackUris.push(match?.spotifyId);
     } else {
-
       const tracks = await search(
         access_token,
         track.track + "+" + track.artist,
@@ -290,7 +287,7 @@ export const updateTop100Chart = async (
       );
       //else find spotify url
       if (tracks === undefined) {
-        continue
+        continue;
       }
       if (tracks.tracks?.items.length > 0) {
         const match = tracks.tracks.items[0];
@@ -314,33 +311,28 @@ export const updateTop100Chart = async (
           { name: name },
           { relations: ["tracks"] }
         );
-  
+
         if (!playlistObject) {
           return;
         }
-  
-        if(playlistObject.tracks.find(playlistTrack =>  {
-          return (playlistTrack.name  === trackDto.name) || (playlistTrack.name === existing?.name)
-        })){
+
+        if (
+          playlistObject.tracks.find((playlistTrack) => {
+            return (
+              playlistTrack.name === trackDto.name ||
+              playlistTrack.name === existing?.name
+            );
+          })
+        ) {
           continue;
         }
-        
-        if(!existing)
-        {
 
-          console.log("not existing creating track")
-          const newTrackDto = await trackRepository.save(trackDto)
-          console.log("created track" + newTrackDto.name)
-          playlistObject.tracks.push(
-            newTrackDto
-          );
-          console.log("added to playlist")
-        }else{
-          console.log("341 adding to playlist " + existing.name)
-          playlistObject.tracks.push(
-            existing
-          );
-          console.log("345 added to playlist")
+        if (!existing) {
+          const newTrackDto = await trackRepository.save(trackDto);
+
+          playlistObject.tracks.push(newTrackDto);
+        } else {
+          playlistObject.tracks.push(existing);
         }
 
         playlistRepo.save(playlistObject);
@@ -358,7 +350,7 @@ export const updateTop100Chart = async (
       })
       .slice(0, 100)
   );
-  
+
   var today = new Date();
   var dd = String(today.getDate()).padStart(2, "0");
   var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
