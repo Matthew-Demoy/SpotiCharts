@@ -31,7 +31,7 @@ createConnection({ ...config, entities } as any)
     // create express app
     
     const app = express();
-    app.use(cors())
+    
     app.use(bodyParser.json());
 
     // register all application routes
