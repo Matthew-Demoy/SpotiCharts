@@ -71,7 +71,7 @@ export const top100Charts: QueryDeepPartialEntity<Playlist>[] = [
 export const playlistSources = [
   {
     url: "https://www.beatport.com/charts/all?genres=11",
-    name: "Tech Houuse",
+    name: "Tech House",
   },
   { url: "https://www.beatport.com/charts/all?genres=5", name: "House" },
   {

@@ -1,4 +1,3 @@
-import fs from "fs";
 import { Browser, Page } from "puppeteer";
 import { getConnection } from "typeorm";
 import { uploadBase64Object } from "../core/aws/aws";
@@ -8,7 +7,6 @@ import {
   changePlaylistsDescription,
   createPlaylist,
   getPlaylist,
-  getPlaylists,
   replacePlaylistItems,
 } from "../core/spotify/playlist-api";
 import { search } from "../core/spotify/search-api";
@@ -273,21 +271,18 @@ export const updateTop100Chart = async (
       if(playlistObject.tracks.find(playlistTrack =>  {
         return playlistTrack.name  === match.name
       })){
-        break;
+        continue
       }
       
-      console.log(`Match Found for ${track.track} by ${track.artist}.`);
-
+      console.log("adding match " + match.name)
       playlistRepo.save({
         ...playlistObject,
         tracks: [...playlistObject.tracks, match],
       });
-
-      trackUris.push(match?.href);
+      console.log("added match " + match.name)
+      trackUris.push(match?.spotifyId);
     } else {
-      console.log(
-        `No match found for ${track.track} by ${track.artist}. \n Searching Spotify a likely Match`
-      );
+
       const tracks = await search(
         access_token,
         track.track + "+" + track.artist,
@@ -295,11 +290,10 @@ export const updateTop100Chart = async (
       );
       //else find spotify url
       if (tracks === undefined) {
-        return undefined;
+        continue
       }
       if (tracks.tracks?.items.length > 0) {
         const match = tracks.tracks.items[0];
-        console.log(`Search found ${match.name} by ${match.artists[0].name}`);
 
         trackUris.push(tracks.tracks.items[0].uri);
 
@@ -328,19 +322,32 @@ export const updateTop100Chart = async (
         if(playlistObject.tracks.find(playlistTrack =>  {
           return (playlistTrack.name  === trackDto.name) || (playlistTrack.name === existing?.name)
         })){
-          break;
+          continue;
         }
         
-        
-        playlistObject.tracks.push(
-          existing || (await trackRepository.save(trackDto))
-        );
+        if(!existing)
+        {
+
+          console.log("not existing creating track")
+          const newTrackDto = await trackRepository.save(trackDto)
+          console.log("created track" + newTrackDto.name)
+          playlistObject.tracks.push(
+            newTrackDto
+          );
+          console.log("added to playlist")
+        }else{
+          console.log("341 adding to playlist " + existing.name)
+          playlistObject.tracks.push(
+            existing
+          );
+          console.log("345 added to playlist")
+        }
+
         playlistRepo.save(playlistObject);
       }
     }
   }
 
-  await setTimeout(() => {}, 5000);
   //call modifcation to playlist
   await replacePlaylistItems(
     access_token,
@@ -351,7 +358,7 @@ export const updateTop100Chart = async (
       })
       .slice(0, 100)
   );
-
+  
   var today = new Date();
   var dd = String(today.getDate()).padStart(2, "0");
   var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
