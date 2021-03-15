@@ -2,6 +2,7 @@ import { Browser, Page } from "puppeteer";
 import { getConnection } from "typeorm";
 import { uploadBase64Object } from "../core/aws/aws";
 import { download } from "../core/file-system";
+import { isQueryFailedError } from "../core/net";
 import {
   addTracksToPlaylist,
   changePlaylistsDescription,
@@ -49,7 +50,7 @@ export const createPlaylistFromCharts = async (
         continue;
       }
 
-      const existingPlaylist = playlistRepo.findOne({ name: chartData.title });
+      const existingPlaylist = await playlistRepo.findOne({ name: chartData.title });
       if (existingPlaylist) {
         console.log(
           `duplicate playlist found for chart ${chartData.title} - not adding`
@@ -328,9 +329,17 @@ export const updateTop100Chart = async (
         }
 
         if (!existing) {
-          const newTrackDto = await trackRepository.save(trackDto);
+          const newTrackDto = await trackRepository
+            .save(trackDto)
+            .catch((err) => {
+              if (isQueryFailedError(err)) {
+                console.log("Query Failed " + err.message);
+              }
+            });
 
-          playlistObject.tracks.push(newTrackDto);
+          if (newTrackDto) {
+            playlistObject.tracks.push(newTrackDto);
+          }
         } else {
           playlistObject.tracks.push(existing);
         }

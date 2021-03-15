@@ -9,7 +9,6 @@ import { Playlist } from "./db/entity/playlist";
 import cron from 'node-cron'
 import { seedCharts, seedSources } from "./seed";
 import updatePlaylists from "./update";
-import cors from 'cors'
 // create connection with database
 // note that it's not active database connection
 // TypeORM creates connection pools and uses them for your requests
@@ -22,7 +21,7 @@ var updateTask = cron.schedule('* * 1,13 * *',async () =>  {
  
 updateTask.start()
 
-
+console.log(process.env.DB_HOST)
 createConnection({ ...config, entities } as any)
   .then(async (connection) => {
        

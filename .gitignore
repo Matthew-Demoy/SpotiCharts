@@ -9,3 +9,5 @@ log.log
 run.sh
 src/tests/core/api-mock/server.js
 i
+image.jpg
+*.env
