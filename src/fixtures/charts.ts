@@ -66,6 +66,77 @@ export const top100Charts: QueryDeepPartialEntity<Playlist>[] = [
     name: "Bassline Grime",
     isTop100: true,
   },
+
+  {
+    spotifyLink: "5Wvdzjq1MREmpvVtZSwJIz",
+    beatportLink: "https://www.beatport.com/genre/dubstep/18/top-100",
+    name: "Dubstep",
+    isTop100: true,
+  },
+
+  {
+    spotifyLink: "0T8qIV4HXmtPB4wuGzAlUw",
+    beatportLink: "https://www.beatport.com/genre/electro-house/17/top-100",
+    name: "Electro House",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "64CKg58MKHfMRoLWn8cpF5",
+    beatportLink: "https://www.beatport.com/genre/electronica/3/top-100",
+    name: "Electronica",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "5N80bczCs57DyToyk7KwPc",
+    beatportLink:
+      "https://www.beatport.com/genre/funky-groove-jackin-house/81/top-100",
+    name: "Jackin House",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "3HoFsZXRtfQ1U9NlCgEHB0",
+    beatportLink: "https://www.beatport.com/genre/future-house/65/top-100",
+    name: "Future House",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "7Bvh4feHx0W8ADg8lVYTjr",
+    beatportLink:
+      "https://www.beatport.com/genre/melodic-house-techno/90/top-100",
+    name: "Melodic House",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "21bxp7DfElvs143xxRMeLW",
+    beatportLink: "https://www.beatport.com/genre/bass-house/91/top-100",
+    name: "Bass House",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "2IMun2qhBX61VntXRsed3X",
+    beatportLink: "https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/top-100",
+    name: "Breaks & Breakbeat",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "6LpUKA8p7N3sSMxQ5U2Mbw",
+    beatportLink: "https://www.beatport.com/genre/dance-electro-pop/39/top-100",
+    name: "Dance(EDM)",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "1nnzRLCRTd9Es58fKorqLf",
+    beatportLink: "https://www.beatport.com/genre/trance/7/top-100",
+    name: "Trance",
+    isTop100: true,
+  },
+  {
+    spotifyLink: "279KVi54EIUaRhTr0HmjtN",
+    beatportLink: "https://www.beatport.com/genre/minimal-deep-tech/14/top-100",
+    name: "Deep Tech",
+    isTop100: true,
+  }
+
 ];
 
 export const playlistSources = [

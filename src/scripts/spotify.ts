@@ -82,7 +82,7 @@ export const createPlaylistFromCharts = async (
         );
 
         if (!match && track) {
-          const trackDto = {
+          const trackDto  = {
             name: track.name,
             artists: track.artists.map((e: any) => {
               return { name: e.name };
@@ -90,7 +90,17 @@ export const createPlaylistFromCharts = async (
             spotifyId: track.uri,
             href: track.href,
           };
-          tracksForPlaylist.push(await trackRepository.save(trackDto));
+        
+          await trackRepository.save(trackDto).catch((err) => {
+            if (isQueryFailedError(err)) {
+              console.log("Query Failed " + err.message);
+            }
+          })
+          .then(res => {
+            tracksForPlaylist.push(res);
+          })
+
+          
         } else if (match) {
           tracksForPlaylist.push(match);
         }
@@ -277,7 +287,11 @@ export const updateTop100Chart = async (
       playlistRepo.save({
         ...playlistObject,
         tracks: [...playlistObject.tracks, match],
-      });
+      }).catch((err) => {
+        if (isQueryFailedError(err)) {
+          console.log("Query Failed " + err.message);
+        }
+      });;
 
       trackUris.push(match?.spotifyId);
     } else {
@@ -338,13 +352,20 @@ export const updateTop100Chart = async (
             });
 
           if (newTrackDto) {
+            console.log('Adding new track ' + newTrackDto.name)
             playlistObject.tracks.push(newTrackDto);
           }
         } else {
+
+          console.log('Adding existing track ' + existing.name)
           playlistObject.tracks.push(existing);
         }
 
-        playlistRepo.save(playlistObject);
+        playlistRepo.save(playlistObject).catch(err => {
+          if (isQueryFailedError(err)) {
+            console.log("Query Failed " + err.message);
+          }
+        });
       }
     }
   }
