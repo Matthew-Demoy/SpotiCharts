@@ -15,16 +15,16 @@ import { addCoverToPlayist } from "./core/spotify/playlist-api";
 import { getFileAsBase64 } from "./core/file-system";
 import { exit } from "process";
 
+
 const updatePlaylists = async () => {
   puppeteer.use(StealthPlugin());
   dotenv.config();
 
   const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? "";
   const spotifyClientId = process.env.SPOTIFY_CLIENT_ID ?? "";
-
   await puppeteer
     .connect({
-      browserURL: 'http://3.122.236.133:21222',
+      browserURL: process.env.PUPPETEER_BROWSER_URL ?? "",
       ...defaultPuppeteerOptions,
     })
     .then(async (browser) => {
@@ -37,7 +37,6 @@ const updatePlaylists = async () => {
         code
       );
 
-      
       const topCharts = await getConnection()
         .getRepository(Playlist)
         .find({ isTop100: true });
@@ -52,7 +51,7 @@ const updatePlaylists = async () => {
           chart.name
         );
       }
-      
+
       const playlistSources = await getConnection()
         .getRepository(PlaylistSource)
         .find();
@@ -68,8 +67,6 @@ const updatePlaylists = async () => {
       browser.close();
       return;
     });
-
-
 };
 
 export default updatePlaylists;
