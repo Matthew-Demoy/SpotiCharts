@@ -23,7 +23,8 @@ const updatePlaylists = async () => {
   const spotifyClientId = process.env.SPOTIFY_CLIENT_ID ?? "";
 
   await puppeteer
-    .launch({
+    .connect({
+      browserURL: 'http://3.122.236.133:21222',
       ...defaultPuppeteerOptions,
     })
     .then(async (browser) => {
@@ -67,6 +68,8 @@ const updatePlaylists = async () => {
       browser.close();
       return;
     });
+
+
 };
 
 export default updatePlaylists;
